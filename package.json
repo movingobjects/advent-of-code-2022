@@ -1,0 +1,15 @@
+{
+  "name": "advent-of-code-2022",
+  "version": "0.1.0",
+  "license": "MIT",
+  "devDependencies": {
+    "arg": "^5.0.1",
+    "chalk": "4",
+    "inquirer": "^8.2.0",
+    "lodash": "^4.17.21",
+    "md5": "^2.3.0"
+  },
+  "scripts": {
+    "start": "node scripts/start"
+  }
+}
