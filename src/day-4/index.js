@@ -1,7 +1,8 @@
 
-const fs = require('fs');
-const path = require('path');
-const input = fs.readFileSync(path.resolve('./input.txt'), 'utf8');
+const {
+  getInput,
+  outputSolution
+} = require('../utils');
 
 const toRange = (rangeStr) => ({
   min: Number(rangeStr.split('-')[0]),
@@ -20,7 +21,7 @@ const areOverlapping = ([a, b]) => {
   return false;
 }
 
-const couples = input
+const partners = getInput()
   .split('\n')
   .map((couple) => (
     couple
@@ -28,10 +29,8 @@ const couples = input
       .map(toRange)
   ));
 
-const part1Sum = couples.filter(areEngulfing).length;
-const part2Sum = couples.filter(areOverlapping).length;
+outputSolution(
+  partners.filter(areEngulfing).length,
+  partners.filter(areOverlapping).length
+);
 
-console.log(`
-Part 1: ${part1Sum}
-Part 2: ${part2Sum}
-`);

@@ -1,12 +1,11 @@
 
-const fs = require('fs');
-const path = require('path');
-const input = fs.readFileSync(path.resolve('./input.txt'), 'utf8');
 const { chunk } = require('lodash');
 
-const getSum = (vals) => (
-  vals.reduce((sum, val) => sum + val, 0)
-);
+const {
+  getInput,
+  getSum,
+  outputSolution
+} = require('../utils');
 
 const getSharedItem = (...arrays) => {
   for (let char of arrays[0]) {
@@ -29,7 +28,7 @@ const getItemPriority = (item) => {
 
 }
 
-const sacks = input.split('\n');
+const sacks = getInput().split('\n');
 
 const part1Sums = sacks.map((sack) => {
 
@@ -49,8 +48,7 @@ const part2Sums = part2Groups.map((group) => (
   getItemPriority(getSharedItem(...group))
 ));
 
-console.log(`
-Part 1: ${getSum(part1Sums)}
-Part 2: ${getSum(part2Sums)}
-`);
-
+outputSolution(
+  getSum(part1Sums),
+  getSum(part2Sums)
+);

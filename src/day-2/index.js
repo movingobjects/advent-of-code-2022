@@ -1,11 +1,8 @@
-
-const fs = require('fs');
-const path = require('path');
-const input = fs.readFileSync(path.resolve('./input.txt'), 'utf8');
-
-const getSum = (vals) => (
-  vals.reduce((sum, val) => sum + val, 0)
-);
+const {
+  getInput,
+  getSum,
+  outputSolution
+} = require('../utils');
 
 const toRPS = (moveVal) => {
   if (moveVal === 'A' || moveVal === 'X') return 'r';
@@ -51,7 +48,7 @@ const calcRoundScore = ({ oppMove, yourMove }) => (
   getMovePts(yourMove) + getOutcomePts(oppMove, yourMove)
 )
 
-const roundVals = input
+const roundVals = getInput()
   .split('\n')
   .map((r) => r.split(' '));
 
@@ -73,7 +70,5 @@ const part2Score = getSum(
     .map(calcRoundScore)
 );
 
-console.log(`
-Part 1: ${part1Score}
-Part 2: ${part2Score}
-`);
+outputSolution(part1Score, part2Score);
+
