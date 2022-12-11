@@ -8,7 +8,16 @@ const getInput = () => {
 }
 
 const getSum = (vals) => (
-  vals.reduce((sum, val) => sum + val, 0)
+  vals.reduce((a, val) => a + val)
+);
+const getDifference = (vals) => (
+  vals.reduce((a, val) => a - val)
+);
+const getProduct = (vals) => (
+  vals.reduce((a, val) => a * val)
+);
+const getQuotient = (vals) => (
+  vals.reduce((a, val) => a / val)
 );
 
 const outputSolution = (ans1, ans2) => {
@@ -18,5 +27,8 @@ const outputSolution = (ans1, ans2) => {
 module.exports = {
   getInput,
   getSum,
+  getDifference,
+  getProduct,
+  getQuotient,
   outputSolution
 }
