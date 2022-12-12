@@ -7,6 +7,16 @@ const getInput = () => {
   });
 }
 
+const writeToFile = (val, filename) => {
+  fs.writeFileSync(
+    path.resolve(`./${filename}`),
+    JSON.stringify(val, null, 2),
+    {
+      encoding: 'utf-8'
+    }
+  )
+}
+
 const getSum = (vals) => (
   vals.reduce((a, val) => a + val)
 );
@@ -21,11 +31,12 @@ const getQuotient = (vals) => (
 );
 
 const outputSolution = (ans1, ans2) => {
-  console.log(`\nSOLUTION\n\nPart 1: ${ans1}\nPart 2: ${ans2}\n`);
+  console.log(`\nSOLUTION\n\nPart 1: ${ans1}\n\nPart 2: ${ans2}\n`);
 }
 
 module.exports = {
   getInput,
+  writeToFile,
   getSum,
   getDifference,
   getProduct,
