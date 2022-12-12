@@ -15,6 +15,7 @@ console.log(`Watching for file changes on ${chalk.green(watchPath)}`);
 
 let md5Prev = null;
 let fsWait = false;
+
 fs.watch(watchPath, (event, filename) => {
   if (filename) {
 
@@ -33,9 +34,9 @@ fs.watch(watchPath, (event, filename) => {
 
       runScript(watchPath, args, (err) => {
         if (err) {
-          console.log(chalk.red(`ERROR`) + `: ${err}`);
+          console.log(chalk.red(`\n× ${err}`));
         } else {
-          console.log(chalk.green(`SUCCESS`) + `: ${watchPath}`);
+          console.log(chalk.green(`\n✓ ${watchPath}`));
         }
       });
     }
