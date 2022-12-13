@@ -1,5 +1,4 @@
 const chalk = require('chalk');
-const _ = require('lodash');
 
 const {
   getInput,
@@ -12,47 +11,43 @@ const inputGrid = getInput()
 
 const getCellId = (x, y) => `${x},${y}`;
 
-const getMoveOpts = (x, y) => {
+// Converts map to graph (nodes + children)
+const makeGraph = () => {
 
-  const canMoveTo = (atX, atY, toX, toY) => {
+  const getMoveOpts = (x, y) => {
 
-    const toInt = (char) => {
-      if (char == 'S') return 'a'.charCodeAt(0);
-      if (char == 'E') return 'z'.charCodeAt(0);
-      return char?.charCodeAt(0);
-    };
+    const canMoveTo = (atX, atY, toX, toY) => {
 
-    const at = inputGrid[atY]?.[atX],
-          to = inputGrid[toY]?.[toX];
+      const toInt = (char) => {
+        if (char == 'S') return 'a'.charCodeAt(0);
+        if (char == 'E') return 'z'.charCodeAt(0);
+        return char?.charCodeAt(0);
+      };
 
-    // Off-grid
-    if (!to) return false;
+      const at = inputGrid[atY]?.[atX],
+        to = inputGrid[toY]?.[toX];
 
-    // Start
-    if (at === 'S') return true;
-    if (to === 'S') return false;
+      if (!to) return false;
+      if (at === 'E') return false;
 
-    // End
-    if (at === 'E') return false;
+      return (
+        toInt(to) <= toInt(at) + 1
+      );
 
-    return (
-      toInt(to) <= toInt(at) + 1
-    );
+    }
+
+    const adjCells = [
+      { x, y: y - 1 },
+      { x, y: y + 1 },
+      { x: x - 1, y },
+      { x: x + 1, y }
+    ];
+
+    return adjCells
+      .filter((to) => canMoveTo(x, y, to.x, to.y))
+      .map(({ x, y }) => getCellId(x, y));
 
   }
-
-  const opts = [
-    { x, y: y - 1 },
-    { x, y: y + 1 },
-    { x: x - 1, y },
-    { x: x + 1, y }
-  ];
-  return opts
-    .filter((to) => canMoveTo(x, y, to.x, to.y))
-    .map(({ x, y }) => getCellId(x, y))
-}
-
-const makeGraph = () => {
 
   const graph = { };
 
@@ -63,10 +58,13 @@ const makeGraph = () => {
         val: col,
         x,
         y,
-        opts: getMoveOpts(x, y)
+        opts: getMoveOpts(x, y),
+        visited: false,
+        fromNode: null
       }
     })
   });
+
   return graph;
 
 }
@@ -74,76 +72,28 @@ const makeGraph = () => {
 const graph = makeGraph();
 
 const getNodesByVal = (val) => {
-  return Object
-    .keys(graph)
+  return Object.keys(graph)
     .filter((id) => graph[id]?.val === val)
     .map((id) => graph[id]);
 }
 
 const resetGraph = () => {
-  return Object
-    .keys(graph)
+  Object.keys(graph)
     .forEach((id) => {
       graph[id].visited = false;
-      graph[id].prevNode = null;
+      graph[id].fromNode = null;
     })
-}
-
-const getPath = (startNode, endNode) => {
-
-  resetGraph();
-
-  let node = startNode;
-
-  const queue = [startNode];
-
-  while (true) {
-
-    if (!queue.length) return null;
-
-    node = queue.shift();
-    node.visited = true;
-
-    if (node.id === endNode.id) {
-      break;
-    }
-
-    node.opts.forEach((id) => {
-
-      let toNode = graph[id];
-
-      if (!toNode.prevNode) {
-        toNode.prevNode = node;
-      }
-
-      if (!toNode.visited) {
-        toNode.visited = true;
-        queue.push(toNode);
-      }
-
-    });
-  }
-
-  const path = [];
-
-  while (node.id !== startNode.id) {
-    path.unshift(node.id);
-    node = node.prevNode;
-  }
-
-  return path;
-
 }
 
 const displayMap = (path) => {
 
-  const lastItem = path.slice().pop();
+  const lastMove = path.slice().pop();
 
   inputGrid.forEach((row, y) => {
     console.log(
       row
         .map((col, x) => {
-          if (lastItem === getCellId(x, y)) {
+          if (lastMove === getCellId(x, y)) {
             return chalk.red(col)
           } else if (path.includes(getCellId(x, y))) {
             return chalk.green(col)
@@ -158,28 +108,78 @@ const displayMap = (path) => {
 
 }
 
-const getBestPathLen = (startVal) => {
+// BFS approach to maze search
+const getPath = (startNode, endNode) => {
+
+  resetGraph();
+
+  let node  = startNode,
+      queue = [startNode];
+
+  while (true) {
+
+    // Dead end
+    if (!queue.length) return null;
+
+    // Get next node from queue
+    node = queue.shift();
+
+    // Completed!
+    if (node.id === endNode.id) break;
+
+    // Loop through valid moves from node
+    node.opts.forEach((id) => {
+
+      let toNode = graph[id];
+
+      // Only record fromNode first time a node is reached.
+      // Used for backtracking and determining optimized path.
+      if (!toNode.fromNode) {
+        toNode.fromNode = node;
+      }
+
+      // Add unvisited opts to queue
+      if (!toNode.visited) {
+        toNode.visited = true;
+        queue.push(toNode);
+      }
+
+    });
+  }
+
+  const path = [];
+
+  // Backtrack from end, fromNode in each node is most
+  // efficient route back to start
+  while (node.id !== startNode.id) {
+    path.unshift(node.id);
+    node = node.fromNode;
+  }
+
+  return path;
+
+}
+
+const getShortestPathFrom = (startVal) => {
 
   const startNodes = getNodesByVal(startVal);
   const endNode = getNodesByVal('E')[0];
 
-  const bestPath = startNodes
-    ?.map((n) => (
-      getPath(n, endNode)
-    ))
-    ?.filter((p) => !!p)
+  const shortestPath = startNodes
+    ?.map((n) => getPath(n, endNode))
+    ?.filter((path) => !!path)
     ?.sort((a, b) => b?.length - a?.length)
     ?.pop();
 
-  displayMap(bestPath);
-  console.log(`Path to E from best start value '${startVal}'\n\n`);
+  displayMap(shortestPath);
+  console.log(`Shortest path to 'E' from '${startVal}'\n\n`);
 
-  return bestPath.length;
+  return shortestPath.length;
 
 }
 
 outputSolution(
-  getBestPathLen('S'),
-  getBestPathLen('a'),
+  getShortestPathFrom('S'),
+  getShortestPathFrom('a'),
 );
 
